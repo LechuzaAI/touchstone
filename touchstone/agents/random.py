@@ -1,18 +1,6 @@
 import itertools
-
-import torch
-
 from touchstone.agents import BaseAgent
-
-
-def make_continuous_random_policy(action_space, device):
-    def policy_fn(*agrs, **kwargs):
-        if device is not None:
-            return torch.from_numpy(action_space.sample())
-        else:
-            return action_space.sample()
-
-    return policy_fn
+from touchstone.util import make_continuous_random_policy
 
 
 class RandomContinuousAgent(BaseAgent):
