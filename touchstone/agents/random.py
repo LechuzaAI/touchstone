@@ -1,6 +1,6 @@
 import itertools
 from touchstone.agents import BaseAgent
-from touchstone.util import make_continuous_random_policy
+from touchstone.policies import make_continuous_random_policy
 
 
 class RandomContinuousAgent(BaseAgent):

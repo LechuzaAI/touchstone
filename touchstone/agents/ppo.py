@@ -2,7 +2,7 @@ import torch
 from torch import optim
 from touchstone.agents import BaseAgent
 from touchstone.util import PPOExperienceBuffer
-from touchstone.util.make import make_ppo_policy
+from touchstone.policies.make import make_ppo_policy
 
 
 class PPOAgent(BaseAgent):
