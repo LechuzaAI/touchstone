@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
 import inspect
-import pickle
 from typing import Sequence, Optional, List, Union
 
 import cloudpickle
 import numpy as np
 
-from touchstone.util import logger
-from touchstone.util.tile_images import tile_images
+from touchstone.environments import logger
+from touchstone.environments.tile_images import tile_images
 
 
 class AlreadySteppingError(Exception):

@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 
 from touchstone.environments import VecEnvWrapper
-from touchstone.util.running_mean_std import RunningMeanStd
+from touchstone.environments.running_mean_std import RunningMeanStd
 
 
 class VecNormalize(VecEnvWrapper):

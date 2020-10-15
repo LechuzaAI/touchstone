@@ -36,3 +36,6 @@ class PPOExperienceBuffer(object):
 
     def push(self, observation):
         self.observations[self.step].copy_(observation)
+
+    def __getitem__(self, t):
+        return self.observations[t]

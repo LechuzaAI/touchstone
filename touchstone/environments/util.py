@@ -71,3 +71,12 @@ def obs_space_info(obs_space):
         shapes[key] = box.shape
         dtypes[key] = box.dtype
     return keys, shapes, dtypes
+
+
+def obs_to_dict(obs):
+    """
+    Convert an observation into a dict.
+    """
+    if isinstance(obs, dict):
+        return obs
+    return {None: obs}

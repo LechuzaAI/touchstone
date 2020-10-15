@@ -2,8 +2,7 @@ import os
 
 from gym.wrappers.monitoring import video_recorder
 
-from touchstone.environments import VecEnvWrapper, VecNormalize, VecFrameStack, DummyVecEnv, SubprocVecEnv
-from touchstone.util import logger
+from touchstone.environments import VecEnvWrapper, VecNormalize, VecFrameStack, DummyVecEnv, SubprocVecEnv, logger
 
 
 class VecVideoRecorder(VecEnvWrapper):

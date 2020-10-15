@@ -1,8 +1,9 @@
 import torch
 from torch import optim
 from touchstone.agents import BaseAgent
-from touchstone.util import PPOExperienceBuffer
+from touchstone.buffers import PPOExperienceBuffer
 from touchstone.policies.make import make_ppo_policy
+from touchstone.utilities import generalized_advantage_estimate
 
 
 class PPOAgent(BaseAgent):
@@ -12,6 +13,7 @@ class PPOAgent(BaseAgent):
         self.params = params
         self.device = device
         self.render = render
+        self.advantages = None
         self.experience_buffer = PPOExperienceBuffer(self.params['T'], self.params['N'], env.observation_space.shape,
                                                      env.action_space.shape)
         if self.device is not None:
@@ -23,7 +25,7 @@ class PPOAgent(BaseAgent):
         self.experience_buffer.push(self.env.reset())
         for i in range(iterations):
             self.explore(self.params["T"])
-            self.compute_advantages(self.params["T"])
+            self.compute_advantages()
             self.optimize()
             if verbose:
                 self.print_info(i, iterations)
@@ -32,7 +34,11 @@ class PPOAgent(BaseAgent):
         pass
 
     def compute_advantages(self, *args, **kwargs):
-        pass
+        advantages = self.experience_buffer.returns[:-1] + self.params['gamma'] * \
+                     self.experience_buffer.values[1:] - self.experience_buffer.values[:-1]
+        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5)
+        self.advantages = generalized_advantage_estimate(self.experience_buffer, self.params['gamma'],
+                                                         self.params['lambda'], self.params['T'])
 
     def explore(self, T):
         for t in range(T):

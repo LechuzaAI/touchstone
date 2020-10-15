@@ -3,14 +3,15 @@ An interface for asynchronous vectorized environments.
 """
 
 import multiprocessing as mp
+from typing import Optional, List, Union
+
 import numpy as np
 import ctypes
 
 from gym.vector.utils import clear_mpi_env_vars, CloudpickleWrapper
 
-from touchstone.environments import VecEnv
-from touchstone.environments.util import obs_space_info, dict_to_obs
-from touchstone.util import logger
+from touchstone.environments import VecEnv, logger
+from touchstone.environments.util import obs_space_info, dict_to_obs, obs_to_dict
 
 _NP_TO_CT = {np.float32: ctypes.c_float,
              np.int32: ctypes.c_int32,
@@ -23,6 +24,22 @@ class ShmemVecEnv(VecEnv):
     """
     Optimized version of SubprocVecEnv that uses shared variables to communicate observations.
     """
+
+    # TODO implement these
+    def seed(self, seed: Optional[int] = None) -> List[Union[None, int]]:
+        pass
+
+    def env_method(self, method_name, *method_args, indices=None, **method_kwargs):
+        pass
+
+    def set_attr(self, attr_name, value, indices=None):
+        pass
+
+    def get_attr(self, attr_name, indices=None):
+        pass
+
+    def close(self):
+        pass
 
     def __init__(self, env_fns, spaces=None, context='spawn'):
         """
