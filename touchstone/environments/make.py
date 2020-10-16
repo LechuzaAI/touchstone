@@ -1,6 +1,6 @@
 import gym
 
-from touchstone.environments import DummyVecEnv, ShmemVecEnv, TimeLimitMask, VecClip, VecPyTorch
+from touchstone.environments import DummyVecEnv, ShmemVecEnv, TimeLimitMask, VecClip, VecPyTorch, SubprocVecEnv
 
 
 def make_env_fn(env_id, seed, rank, log_dir=None, allow_early_resets=False, max_episode_steps=None):
@@ -24,7 +24,8 @@ def make_envs(env_name, seed, num_processes, gamma, device, max_episode_steps=No
     envs = [make_env_fn(env_name, seed, i, max_episode_steps=max_episode_steps) for i in range(num_processes)]
 
     if len(envs) > 1:
-        envs = ShmemVecEnv(envs, context='fork')
+        # envs = ShmemVecEnv(envs, context='fork')
+        envs = SubprocVecEnv(envs)
     else:
         envs = DummyVecEnv(envs)
 
