@@ -1,0 +1,35 @@
+from typing import Tuple
+
+import torch
+from torch import nn
+
+from touchstone.agents import Agent
+from touchstone.buffers import Experience
+
+
+class PPOAgent(Agent):
+    @torch.no_grad()
+    def play_step(self, actor_critic: nn.Module, deterministic: bool = True, device: str = 'cpu') -> Tuple[float, bool]:
+        value, action, action_log_prob = self.get_action(actor_critic, deterministic)
+        new_state, reward, done, _ = self.env.step(action)
+        exp = Experience(self.state, action, reward, done, new_state, action_log_prob, value)
+        self.buffer.append(exp)
+        self.state = new_state
+
+        if done:
+            self.reset()
+
+        return reward, done
+
+    def get_action(self, actor_critic: nn.Module, deterministic: bool = False, device: str = 'cpu'):
+        state = torch.tensor([self.state], device=device)
+        value, action_distribution = actor_critic(state)
+
+        if deterministic:
+            action = action_distribution.mode
+        else:
+            action = action_distribution.sample()
+
+        action_log_prob = action_distribution.log_prob(action).sum(-1, keepdim=True)
+
+        return value, action, action_log_prob

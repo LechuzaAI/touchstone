@@ -1,6 +1,5 @@
 import torch.nn as nn
 from torch.nn import ModuleList, Linear, Tanh
-
 from touchstone.nets import BaseNet, LogStdGaussian
 
 
