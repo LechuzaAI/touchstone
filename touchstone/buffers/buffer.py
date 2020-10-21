@@ -8,7 +8,7 @@ from touchstone.buffers import Experience
 class Buffer:
     def __init__(self, size: int) -> None:
         self.length = size
-        self.buffer = deque(maxlen=size)
+        self.buffer = deque(maxlen=size + 1)
 
     def __len__(self) -> int:
         return self.length

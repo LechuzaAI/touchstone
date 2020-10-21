@@ -22,7 +22,9 @@ class PPOAgent(Agent):
         return reward, done
 
     def get_action(self, actor_critic: nn.Module, deterministic: bool = False, device: str = 'cpu'):
-        state = torch.tensor([self.state], device=device)
+        if not isinstance(self.state, torch.Tensor):
+            state = torch.tensor(self.state, device=device)
+
         value, action_distribution = actor_critic(state)
 
         if deterministic:
@@ -33,3 +35,9 @@ class PPOAgent(Agent):
         action_log_prob = action_distribution.log_prob(action).sum(-1, keepdim=True)
 
         return value, action, action_log_prob
+
+    def evaluate_actions(self, actor_critic: nn.Module, observation_batch, actions_batch):
+        values, action_distribution = actor_critic(observation_batch)
+        action_log_probs = action_distribution.log_prob(actions_batch).sum(-1, keepdim=True)
+
+        return values, action_log_probs
