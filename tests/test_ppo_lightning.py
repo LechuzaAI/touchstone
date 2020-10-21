@@ -9,9 +9,10 @@ def main(params) -> None:
     model = PPOLightning(params)
 
     trainer = pl.Trainer(
-        gpus=1,
-        distributed_backend='dp',
-        max_epochs=500,
+        # gpus=1,
+        # distributed_backend='dp',
+        min_epochs=params.iterations,
+        max_epochs=params.iterations,
         val_check_interval=100
     )
 
@@ -45,6 +46,8 @@ parser.add_argument("--time_steps", type=int, default=512,
                     help="time steps for collecting data")
 parser.add_argument("--num_actors", type=int, default=1,
                     help="number of actors to run in parallel")
+parser.add_argument("--epochs", type=int, default=100)
+parser.add_argument("--iterations", type=int, default=10000)
 
 args, _ = parser.parse_known_args()
 

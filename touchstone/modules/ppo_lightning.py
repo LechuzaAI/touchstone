@@ -19,9 +19,14 @@ class PPOLightning(pl.LightningModule):
         self.actor_critic = ActorCriticNet(observation_shape, action_shape)
         self.buffer = PPOBuffer(self.params.time_steps * self.params.num_actors)
         self.agent = PPOAgent(self.env, self.buffer)
+        self.explore(self.params.time_steps)
         self.total_reward = 0
         self.episode_reward = 0
-        self.explore(self.params.time_steps)
+        self.iterations = self.params.iterations
+        self.time_steps = self.params.time_steps
+        self.num_actors = self.params.num_actors
+        self.epochs = self.params.epochs
+        self.count = 0
 
     def explore(self, steps: int) -> None:
         for i in range(steps):
@@ -30,6 +35,14 @@ class PPOLightning(pl.LightningModule):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         output = self.actor_critic(x)
         return output
+
+    def on_epoch_start(self) -> None:
+        # this is called on every pl epoch, which we call an iteration
+        # if we've run at least self.epochs (which are PPO epochs),
+        # then run exploration again for self.time_steps
+        if self.current_epoch % self.epochs == 0:
+            self.explore(self.params.time_steps)
+            print("New PPO iteration")
 
     def ppo_loss(self, batch):
         pass
