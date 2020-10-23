@@ -48,7 +48,8 @@ parser.add_argument("--num_actors", type=int, default=1,
                     help="number of actors to run in parallel")
 parser.add_argument("--epochs", type=int, default=10)
 parser.add_argument("--iterations", type=int, default=10000)
-parser.add_argument("--gae_lambda", type=int, default=0.95)
+parser.add_argument("--gae_lambda", type=float, default=0.95)
+parser.add_argument("--clip_param", type=float, default=0.2)
 
 args, _ = parser.parse_known_args()
 

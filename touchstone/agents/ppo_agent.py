@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from touchstone.agents import Agent
-from touchstone.buffers import Experience
+from touchstone.buffers import Experience, PPOExperience
 
 
 class PPOAgent(Agent):
@@ -12,7 +12,7 @@ class PPOAgent(Agent):
     def play_step(self, actor_critic: nn.Module, deterministic: bool = True, device: str = 'cpu') -> Tuple[float, bool]:
         value, action, action_log_prob = self.get_action(actor_critic, deterministic)
         new_state, reward, done, _ = self.env.step(action)
-        exp = Experience(self.state, action, reward, done, new_state, action_log_prob, value)
+        exp = PPOExperience(self.state, action, reward, done, new_state, action_log_prob, value)
         self.buffer.append(exp)
         self.state = new_state
 
@@ -24,7 +24,8 @@ class PPOAgent(Agent):
     def get_action(self, actor_critic: nn.Module, deterministic: bool = False, device: str = 'cpu'):
         if not isinstance(self.state, torch.Tensor):
             state = torch.tensor(self.state, device=device)
-
+        else:
+            state = self.state
         value, action_distribution = actor_critic(state)
 
         if deterministic:

@@ -10,6 +10,8 @@ class PPODataset(IterableDataset):
         self.sample_size = sample_size
 
     def __iter__(self) -> Tuple:
-        states, actions, action_log_probs, values, rewards, dones, new_states = self.buffer.sample(self.sample_size)
+        states, actions, action_log_probs, values, rewards, dones, new_states, advantages = self.buffer.sample(
+            self.sample_size)
         for i in range(len(dones)):
-            yield states[i], actions[i], action_log_probs[i], values[i], rewards[i], dones[i], new_states[i]
+            yield states[i], actions[i], action_log_probs[i], values[i], rewards[i], dones[i], new_states[i], \
+                  advantages[i]
