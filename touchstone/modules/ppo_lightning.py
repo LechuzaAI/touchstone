@@ -1,7 +1,4 @@
 import argparse
-from typing import List
-
-import gym
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -72,7 +69,6 @@ class PPOLightning(pl.LightningModule):
         states_batch, actions_batch, old_action_log_probs_batch, values_batch, rewards_batch, dones_batch, new_states_batch, advantages_batch = batch
         values, action_log_probs = self.agent.evaluate_actions(self.actor_critic, states_batch, actions_batch)
         ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
-        # TODO need to add advantages to buffer and have them returned along with batch, otherwise this will not work
         surr1 = ratio * advantages_batch
         surr2 = torch.clamp(ratio, 1.0 - self.params.clip_param, 1.0 + self.params.clip_param) * advantages_batch
         action_loss = -torch.min(surr1, surr2).mean()
@@ -80,6 +76,7 @@ class PPOLightning(pl.LightningModule):
 
     def training_step(self, batch, nb_batch):
         loss = self.clip_loss(batch)
+        return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=self.params.lr)

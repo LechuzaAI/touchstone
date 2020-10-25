@@ -1,7 +1,6 @@
 from collections import deque
 from dataclasses import dataclass
 import numpy as np
-
 from touchstone.buffers import Experience
 
 

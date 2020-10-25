@@ -1,10 +1,8 @@
 from typing import Tuple
-
 import torch
 from torch import nn
-
 from touchstone.agents import Agent
-from touchstone.buffers import Experience, PPOExperience
+from touchstone.buffers import PPOExperience
 
 
 class PPOAgent(Agent):
@@ -37,7 +35,8 @@ class PPOAgent(Agent):
 
         return value, action, action_log_prob
 
-    def evaluate_actions(self, actor_critic: nn.Module, observation_batch, actions_batch):
+    @staticmethod
+    def evaluate_actions(actor_critic: nn.Module, observation_batch, actions_batch):
         values, action_distribution = actor_critic(observation_batch)
         action_log_probs = action_distribution.log_prob(actions_batch).sum(-1, keepdim=True)
 
