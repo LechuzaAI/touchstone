@@ -31,13 +31,13 @@ class PPOLightning(pl.LightningModule):
         self.count = 0
         self.advantages = None
 
-    def explore(self, steps: int) -> None:
-        for i in range(steps + 1):
-            self.agent.play_step(self.actor_critic, deterministic=False, device=self.device)
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         output = self.actor_critic(x)
         return output
+
+    def explore(self, steps: int) -> None:
+        for i in range(steps + 1):
+            self.agent.explore_step(self.actor_critic, deterministic=False, device=self.device)
 
     def on_epoch_start(self) -> None:
         # this is called on every pl epoch, which we call an iteration
@@ -47,36 +47,35 @@ class PPOLightning(pl.LightningModule):
         if self.current_epoch % self.epochs == 0:
             self.explore(self.params.time_steps)
             rewards, values = self.buffer.get_rewards_values()
-            advantages = self.gae_advantage(rewards, values)
+            advantages = self.gae(rewards, values)
             self.advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-5)
             self.buffer.update_advantages(self.advantages)
 
-    def gae_advantage(self, rewards, values):
+    def gae(self, rewards, values):
+        # TODO look into removing rewards/values for terminal states
         gamma = self.params.gamma
         gae_lambda = self.params.gae_lambda
         advantage = 0
-        advantages = []
+        advantages = [0] * (len(values) - 1)
 
         for idx in reversed(range(len(values) - 1)):
             delta = rewards[idx] + gamma * values[idx + 1] - values[idx]
             advantage = delta + gamma * gae_lambda * advantage
-            advantages.append(advantage)
+            advantages[idx] = advantage
 
-        advantages.reverse()
         return np.array(advantages)
 
     def clip_loss(self, batch):
-        states_batch, actions_batch, old_action_log_probs_batch, values_batch, rewards_batch, dones_batch, new_states_batch, advantages_batch = batch
-        values, action_log_probs = self.agent.evaluate_actions(self.actor_critic, states_batch, actions_batch)
-        ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
-        surr1 = ratio * advantages_batch
-        surr2 = torch.clamp(ratio, 1.0 - self.params.clip_param, 1.0 + self.params.clip_param) * advantages_batch
+        states, actions, old_action_log_probs, values, rewards, dones, new_states, advantages = batch
+        values, action_log_probs = self.agent.evaluate_actions(self.actor_critic, states, actions)
+        ratio = torch.exp(action_log_probs - old_action_log_probs)
+        surr1 = ratio * advantages
+        surr2 = torch.clamp(ratio, 1.0 - self.params.clip_param, 1.0 + self.params.clip_param) * advantages
         action_loss = -torch.min(surr1, surr2).mean()
         return action_loss
 
     def training_step(self, batch, nb_batch):
-        loss = self.clip_loss(batch)
-        return loss
+        return self.clip_loss(batch)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=self.params.lr)

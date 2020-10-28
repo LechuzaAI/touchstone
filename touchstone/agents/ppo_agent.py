@@ -6,11 +6,17 @@ from touchstone.buffers import PPOExperience
 
 
 class PPOAgent(Agent):
+    # TODO implement: does not need to fill buffer when playing
+    def play_step(self, *args, **kwargs):
+        pass
+
     @torch.no_grad()
-    def play_step(self, actor_critic: nn.Module, deterministic: bool = True, device: str = 'cpu') -> Tuple[float, bool]:
+    def explore_step(self, actor_critic: nn.Module, deterministic: bool = True, device: str = 'cpu') -> Tuple[
+        float, bool]:
         value, action, action_log_prob = self.get_action(actor_critic, deterministic)
         new_state, reward, done, _ = self.env.step(action)
-        exp = PPOExperience(self.state, action, reward, done, new_state, action_log_prob, value)
+        exp = PPOExperience(self.state, action.detach().numpy(), reward, done, new_state,
+                            action_log_prob.detach().numpy(), value.detach().numpy())
         self.buffer.append(exp)
         self.state = new_state
 
@@ -31,13 +37,13 @@ class PPOAgent(Agent):
         else:
             action = action_distribution.sample()
 
-        action_log_prob = action_distribution.log_prob(action).sum(-1, keepdim=True)
+        action_log_prob = action_distribution.log_prob(action)
 
         return value, action, action_log_prob
 
     @staticmethod
     def evaluate_actions(actor_critic: nn.Module, observation_batch, actions_batch):
         values, action_distribution = actor_critic(observation_batch)
-        action_log_probs = action_distribution.log_prob(actions_batch).sum(-1, keepdim=True)
+        action_log_probs = action_distribution.log_prob(actions_batch)
 
         return values, action_log_probs

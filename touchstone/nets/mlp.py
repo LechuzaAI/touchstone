@@ -1,6 +1,6 @@
 import torch.nn as nn
 from torch.nn import ModuleList, Linear, Tanh
-from touchstone.nets import BaseNet, LogStdGaussian
+from touchstone.nets import BaseNet, GaussianLogStd
 
 
 class MLPNet(BaseNet):
@@ -11,9 +11,10 @@ class MLPNet(BaseNet):
                                   Linear(hidden_size, hidden_size),
                                   Tanh()])
         if dist_output:
-            self.layers.extend([LogStdGaussian(hidden_size, output_num)])
+            # self.layers.append(LogStdGaussian(hidden_size, output_num))
+            self.layers.append(GaussianLogStd(hidden_size, output_num))
         else:
-            self.layers.extend([nn.Linear(hidden_size, output_num)])
+            self.layers.append(nn.Linear(hidden_size, output_num))
 
         self.input_num = input_num
         self.output_num = output_num
