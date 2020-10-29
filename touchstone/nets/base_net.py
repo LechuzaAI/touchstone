@@ -14,3 +14,8 @@ class BaseNet(nn.Module):
             x = layer(x.float())
 
         return x
+
+    def to(self, *args, **kwargs):
+        super(BaseNet, self).to(*args, **kwargs)
+        for layer in self.layers:
+            layer.to(*args, **kwargs)

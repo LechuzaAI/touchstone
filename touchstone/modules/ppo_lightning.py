@@ -21,7 +21,6 @@ class PPOLightning(pl.LightningModule):
         self.actor_critic = ActorCriticNet(observation_shape, action_shape)
         self.buffer = PPOBuffer(self.params.time_steps * self.params.num_actors)
         self.agent = PPOAgent(self.env, self.buffer)
-        self.explore(self.params.time_steps)
         self.total_reward = 0
         self.episode_reward = 0
         self.iterations = self.params.iterations
@@ -38,6 +37,10 @@ class PPOLightning(pl.LightningModule):
     def explore(self, steps: int) -> None:
         for i in range(steps + 1):
             self.agent.explore_step(self.actor_critic, deterministic=False, device=self.device)
+
+    def on_train_start(self) -> None:
+        self.env.reset()
+        self.explore(self.params.time_steps)
 
     def on_epoch_start(self) -> None:
         # this is called on every pl epoch, which we call an iteration
@@ -78,7 +81,7 @@ class PPOLightning(pl.LightningModule):
         return self.clip_loss(batch)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=self.params.lr)
+        optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=self.params.lr, betas=(0.9, 0.999))
         return [optimizer]
 
     def __dataloader(self):

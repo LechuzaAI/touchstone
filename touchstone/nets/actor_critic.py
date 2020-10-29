@@ -13,3 +13,8 @@ class ActorCriticNet(nn.Module):
         action_distribution = self.actor(x)
         value = self.critic(x)
         return value, action_distribution
+
+    def to(self, *args, **kwargs):
+        super(ActorCriticNet, self).to(*args, **kwargs)
+        self.actor.to(*args, **kwargs)
+        self.critic.to(*args, **kwargs)

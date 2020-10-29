@@ -13,10 +13,10 @@ class PPOAgent(Agent):
     @torch.no_grad()
     def explore_step(self, actor_critic: nn.Module, deterministic: bool = True, device: str = 'cpu') -> Tuple[
         float, bool]:
-        value, action, action_log_prob = self.get_action(actor_critic, deterministic)
-        new_state, reward, done, _ = self.env.step(action)
-        exp = PPOExperience(self.state, action.detach().numpy(), reward, done, new_state,
-                            action_log_prob.detach().numpy(), value.detach().numpy())
+        value, action, action_log_prob = self.get_action(actor_critic, deterministic, device)
+        new_state, reward, done, _ = self.env.step(action.detach().cpu().numpy())
+        exp = PPOExperience(self.state, action.detach().cpu().numpy(), reward, done, new_state,
+                            action_log_prob.detach().cpu().numpy(), value.detach().cpu().numpy())
         self.buffer.append(exp)
         self.state = new_state
 
