@@ -120,7 +120,7 @@ class ShmemVecEnv(VecEnv):
             bufs = [b[k] for b in self.obs_bufs]
             o = [np.frombuffer(b.get_obj(), dtype=self.obs_dtypes[k]).reshape(self.obs_shapes[k]) for b in bufs]
             result[k] = np.array(o)
-        return dict_to_obs(result)
+        return dict_to_obs(self.observation_space, result)
 
 
 def _subproc_worker(pipe, parent_pipe, env_fn_wrapper, obs_bufs, obs_shapes, obs_dtypes, keys):
@@ -136,7 +136,7 @@ def _subproc_worker(pipe, parent_pipe, env_fn_wrapper, obs_bufs, obs_shapes, obs
             dst_np = np.frombuffer(dst, dtype=obs_dtypes[k]).reshape(obs_shapes[k])  # pylint: disable=W0212
             np.copyto(dst_np, flatdict[k])
 
-    env = env_fn_wrapper.x()
+    env = env_fn_wrapper.fn()
     parent_pipe.close()
     try:
         while True:

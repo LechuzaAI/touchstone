@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from touchstone.agents import PPOAgent
 from touchstone.buffers import PPOBuffer
 from touchstone.datasets import PPODataset
-from touchstone.environments.make import make_envs
+from touchstone.environments.make import make_envs, make_vec_envs
 from touchstone.nets import ActorCriticNet
 import numpy as np
 
@@ -14,8 +14,7 @@ class PPOLightning(pl.LightningModule):
     def __init__(self, params: argparse.Namespace) -> None:
         super(PPOLightning, self).__init__()
         self.params = params
-        self.env = make_envs(self.params.env, 42, self.params.num_actors, device=self.device,
-                             max_episode_steps=self.params.time_steps)
+        self.env = make_vec_envs(self.params.env, 42, self.params.num_actors)
         observation_shape = self.env.observation_space.shape
         action_shape = self.env.action_space.shape
         self.actor_critic = ActorCriticNet(observation_shape, action_shape)
@@ -71,7 +70,8 @@ class PPOLightning(pl.LightningModule):
     def clip_loss(self, batch):
         states, actions, old_action_log_probs, values, rewards, dones, new_states, advantages = batch
         values, action_log_probs = self.agent.evaluate_actions(self.actor_critic, states, actions)
-        ratio = torch.exp(action_log_probs - old_action_log_probs)
+        ratio = torch.exp(action_log_probs - old_action_log_probs).squeeze()
+        advantages = advantages.squeeze()
         surr1 = ratio * advantages
         surr2 = torch.clamp(ratio, 1.0 - self.params.clip_param, 1.0 + self.params.clip_param) * advantages
         action_loss = -torch.min(surr1, surr2).mean()
@@ -81,7 +81,7 @@ class PPOLightning(pl.LightningModule):
         return self.clip_loss(batch)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=self.params.lr, betas=(0.9, 0.999))
+        optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=self.params.lr, betas=self.params.betas)
         return [optimizer]
 
     def __dataloader(self):

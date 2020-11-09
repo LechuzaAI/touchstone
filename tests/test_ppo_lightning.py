@@ -25,6 +25,7 @@ np.random.seed(0)
 parser = argparse.ArgumentParser()
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=3e-4, help="learning rate")
+parser.add_argument("--betas", type=tuple, default=(0.9, 0.999), help="betas for ADAM")
 parser.add_argument("--env", type=str, default="Pendulum-v0", help="gym environment tag")
 parser.add_argument("--gamma", type=float, default=0.99, help="discount factor")
 parser.add_argument("--sync_rate", type=int, default=10,

@@ -16,6 +16,7 @@ from touchstone.environments.shmem_vec_env import ShmemVecEnv
 from touchstone.environments.timelimit_mask import TimeLimitMask
 from touchstone.environments.vec_clip import VecClip
 from touchstone.environments.vec_pytorch import VecPyTorch
+from touchstone.environments.vec_log import VecLog
 
 
 def unwrap_vec_normalize(env: Union[gym.Env, VecEnv]) -> Union[VecNormalize, None]:

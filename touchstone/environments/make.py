@@ -1,6 +1,6 @@
 import gym
 
-from touchstone.environments import DummyVecEnv, ShmemVecEnv, TimeLimitMask, VecClip, VecPyTorch, SubprocVecEnv
+from touchstone.environments import DummyVecEnv, ShmemVecEnv, TimeLimitMask, VecClip, VecPyTorch, SubprocVecEnv, VecLog
 
 
 def make_env_fn(env_id, seed, rank, log_dir=None, allow_early_resets=False, max_episode_steps=None):
@@ -9,12 +9,10 @@ def make_env_fn(env_id, seed, rank, log_dir=None, allow_early_resets=False, max_
         env.seed(seed + rank)
         # TODO: add logging here based on log_dir and allow_early_resets
         # see pytorch-a2c-ppo-acktr-gail repo
-
-        if max_episode_steps is not None:
-            env = TimeLimitMask(env, max_episode_steps=max_episode_steps)
-        elif str(env.__class__.__name__).find('TimeLimit') >= 0:
-            env = TimeLimitMask(env)
-
+        # if max_episode_steps is not None:
+        #     env = TimeLimitMask(env, max_episode_steps=max_episode_steps)
+        # elif str(env.__class__.__name__).find('TimeLimit') >= 0:
+        #     env = TimeLimitMask(env)
         return env
 
     return make_env
@@ -36,5 +34,19 @@ def make_envs(env_name, seed, num_processes, gamma=None, device='cpu', max_episo
             envs = VecClip(envs, gamma=gamma)
 
     # envs = VecPyTorch(envs, device, env_name)
+
+    return envs
+
+
+def make_vec_envs(env_name, seed, num_processes, log=True):
+    envs = [make_env_fn(env_name, seed, i) for i in range(num_processes)]
+    if len(envs) > 1:
+        # envs = SubprocVecEnv(envs)
+        envs = ShmemVecEnv(envs)
+    else:
+        envs = DummyVecEnv(envs)
+
+    if log:
+        envs = VecLog(envs)
 
     return envs
