@@ -1,4 +1,6 @@
 import argparse
+from collections import OrderedDict
+
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -18,7 +20,7 @@ class PPOLightning(pl.LightningModule):
         observation_shape = self.env.observation_space.shape
         action_shape = self.env.action_space.shape
         self.actor_critic = ActorCriticNet(observation_shape, action_shape)
-        self.buffer = PPOBuffer(self.params.time_steps * self.params.num_actors)
+        self.buffer = PPOBuffer(self.params.time_steps, self.params.num_actors)
         self.agent = PPOAgent(self.env, self.buffer)
         self.total_reward = 0
         self.episode_reward = 0
@@ -68,9 +70,10 @@ class PPOLightning(pl.LightningModule):
         return np.array(advantages)
 
     def clip_loss(self, batch):
+        # TODO make sure this works in a vectorized environment (it's currently not)
         states, actions, old_action_log_probs, values, rewards, dones, new_states, advantages = batch
         values, action_log_probs = self.agent.evaluate_actions(self.actor_critic, states, actions)
-        ratio = torch.exp(action_log_probs - old_action_log_probs).squeeze()
+        ratio = torch.exp(action_log_probs.unsqueeze(dim=1) - old_action_log_probs).squeeze()
         advantages = advantages.squeeze()
         surr1 = ratio * advantages
         surr2 = torch.clamp(ratio, 1.0 - self.params.clip_param, 1.0 + self.params.clip_param) * advantages
@@ -78,7 +81,12 @@ class PPOLightning(pl.LightningModule):
         return action_loss
 
     def training_step(self, batch, nb_batch):
-        return self.clip_loss(batch)
+        loss = self.clip_loss(batch)
+        reward = self.env.mean_reward_per_step
+        total_reward = sum(self.env.returns)
+        self.log('mean_reward_per_step', reward, prog_bar=True)
+        self.log('total_reward', total_reward, prog_bar=True)
+        return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr=self.params.lr, betas=self.params.betas)

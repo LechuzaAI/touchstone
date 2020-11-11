@@ -3,10 +3,11 @@ import torch
 from torch import nn
 from touchstone.agents import Agent
 from touchstone.buffers import PPOExperience
+import numpy as np
 
 
 class PPOAgent(Agent):
-    # TODO implement: does not need to fill buffer when playing
+    # TODO implement (note: does not need to fill buffer when playing)
     def play_step(self, *args, **kwargs):
         pass
 
@@ -15,13 +16,14 @@ class PPOAgent(Agent):
         float, bool]:
         value, action, action_log_prob = self.get_action(actor_critic, deterministic, device)
         new_state, reward, done, _ = self.env.step(action.detach().cpu().numpy())
-        exp = PPOExperience(self.state, action.detach().cpu().numpy(), reward, done, new_state,
+        exp = PPOExperience(self.state, action.detach().cpu().numpy(), np.expand_dims(reward, axis=1), done, new_state,
                             action_log_prob.detach().cpu().numpy(), value.detach().cpu().numpy())
         self.buffer.append(exp)
         self.state = new_state
 
-        if done:
-            self.reset()
+        # TODO investigate if we really need to reset if done when using vectorized environments (i think not)
+        # if done:
+        #     self.reset()
 
         return reward, done
 
@@ -39,7 +41,7 @@ class PPOAgent(Agent):
 
         action_log_prob = action_distribution.log_prob(action)
 
-        return value, action, action_log_prob
+        return value, action, action_log_prob.unsqueeze(1)
 
     @staticmethod
     def evaluate_actions(actor_critic: nn.Module, observation_batch, actions_batch):

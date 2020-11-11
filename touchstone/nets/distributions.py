@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class GaussianLogStd(nn.Module):
-    def __init__(self, input_num, output_num, action_std=1.0):
+    def __init__(self, input_num, output_num, action_std=0.5):
         super(GaussianLogStd, self).__init__()
         self.mean = nn.Sequential(nn.Linear(input_num, output_num), nn.Tanh())
         self.output_num = output_num

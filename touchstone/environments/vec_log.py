@@ -14,6 +14,10 @@ class VecLog(VecEnvWrapper):
         self.returns.append(reward)
         self.total_steps += 1
         self.mean_reward_per_step = np.array(self.returns).mean() / self.total_steps
+        if all(done):
+            self.returns = []
+            self.mean_reward_per_step = 0
+            self.total_steps = 0
         return obs, reward, done, info
 
     def reset(self):
