@@ -70,7 +70,6 @@ class PPOLightning(pl.LightningModule):
         return np.array(advantages)
 
     def clip_loss(self, batch):
-        # TODO make sure this works in a vectorized environment (it's currently not)
         states, actions, old_action_log_probs, values, rewards, dones, new_states, advantages = batch
         values, action_log_probs = self.agent.evaluate_actions(self.actor_critic, states, actions)
         ratio = torch.exp(action_log_probs.unsqueeze(dim=1) - old_action_log_probs).squeeze()
