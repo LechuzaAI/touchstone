@@ -7,13 +7,13 @@ import numpy as np
 
 
 class PPOAgent(Agent):
-    # TODO implement (note: does not need to fill buffer when playing)
-    def play_step(self, *args, **kwargs):
-        pass
+    @torch.no_grad()
+    def play_step(self, actor_critic: nn.Module, deterministic: bool = True, device: str = 'cpu'):
+        value, action, action_log_prob = self.get_action(actor_critic, deterministic, device)
+        return self.env.step(action.detach().cpu().numpy())
 
     @torch.no_grad()
-    def explore_step(self, actor_critic: nn.Module, deterministic: bool = True, device: str = 'cpu') -> Tuple[
-        float, bool]:
+    def explore_step(self, actor_critic: nn.Module, deterministic: bool = False, device: str = 'cpu'):
         value, action, action_log_prob = self.get_action(actor_critic, deterministic, device)
         new_state, reward, done, _ = self.env.step(action.detach().cpu().numpy())
         exp = PPOExperience(self.state, action.detach().cpu().numpy(), np.expand_dims(reward, axis=1), done, new_state,
@@ -24,8 +24,6 @@ class PPOAgent(Agent):
         # TODO investigate if we really need to reset if done when using vectorized environments (i think not)
         # if done:
         #     self.reset()
-
-        return reward, done
 
     def get_action(self, actor_critic: nn.Module, deterministic: bool = False, device: str = 'cpu'):
         if not isinstance(self.state, torch.Tensor):
