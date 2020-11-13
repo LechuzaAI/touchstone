@@ -6,7 +6,7 @@ from touchstone.modules import PPOLightning
 
 
 def main(params) -> None:
-    agent =PPOLightning.load_from_checkpoint('tb_logs/default/version_1/checkpoints/epoch=499999.ckpt')
+    agent =PPOLightning.load_from_checkpoint('tb_logs/default/version_0/checkpoints/epoch=99999.ckpt')
 
     print(agent.hparams)
     agent.eval()
@@ -17,11 +17,16 @@ def main(params) -> None:
     state = env.reset()
     done = False
 
+    total_reward = 0
+
     while not done:
         value, action_dist = agent(state)
         action = action_dist.mean
         state, reward, done, _ = env.step(action.detach().numpy())
+        total_reward += reward
         env.render()
+
+    print(total_reward)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--batch_size", type=int, default=128, help="size of the batches")
