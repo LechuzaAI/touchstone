@@ -51,10 +51,10 @@ parser.add_argument("--time_steps", type=int, default=128,
 parser.add_argument("--num_actors", type=int, default=8,
                     help="number of actors to run in parallel")
 parser.add_argument("--epochs", type=int, default=5)
-parser.add_argument("--iterations", type=int, default=5000)
+parser.add_argument("--iterations", type=int, default=100000)
 parser.add_argument("--gae_lambda", type=float, default=0.95)
 parser.add_argument("--clip_param", type=float, default=0.1)
-parser.add_argument("--action_std", type=float, default=0.5)
+parser.add_argument("--action_std", type=float, default=1.0)
 
 args, _ = parser.parse_known_args()
 

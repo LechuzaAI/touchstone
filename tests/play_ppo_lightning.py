@@ -1,14 +1,27 @@
 import argparse
 
+import gym
+
 from touchstone.modules import PPOLightning
 
 
 def main(params) -> None:
-    agent =PPOLightning.load_from_checkpoint('tb_logs/default/version_0/checkpoints/epoch=24999.ckpt')
+    agent =PPOLightning.load_from_checkpoint('tb_logs/default/version_1/checkpoints/epoch=499999.ckpt')
 
     print(agent.hparams)
     agent.eval()
+    agent.env.close()
 
+    env = gym.make(params.env)
+
+    state = env.reset()
+    done = False
+
+    while not done:
+        value, action_dist = agent(state)
+        action = action_dist.mean
+        state, reward, done, _ = env.step(action.detach().numpy())
+        env.render()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--batch_size", type=int, default=128, help="size of the batches")

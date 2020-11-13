@@ -31,7 +31,9 @@ class PPOLightning(pl.LightningModule):
         self.count = 0
         self.advantages = None
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: any) -> torch.Tensor:
+        if not isinstance(x, torch.Tensor):
+            x = torch.tensor(x, device=self.device)
         output = self.actor_critic(x)
         return output
 

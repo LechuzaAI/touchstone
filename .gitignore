@@ -1,4 +1,5 @@
 tests/lightning_logs
+tests/tb_logs
 
 # pycharm
 .idea
